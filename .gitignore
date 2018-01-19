@@ -1,0 +1,7 @@
+#Visual studio code
+.vscode
+
+# Project
+/datasets/
+/dataset/
+/deprecated/
