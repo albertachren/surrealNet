@@ -10,7 +10,7 @@ import os
 
 batch_size = 300
 BASE_PATH = "E:/Stuff/Python/datasets/surrealNet/"
-RESIZE_LIST = (1, 1, 1, 0.8, 0.8, 0.5)
+RESIZE_LIST = (1.2, 1.2, 1, 1, 0.8, 0.8)
 show = True
 # "E:\Stuff\Python\datasets\surrealNet"
 
@@ -22,11 +22,10 @@ def generate_image(source, offset, rotation, size, bcolor):
     y = random.randrange(-offset, offset)
     rs = int(random.choice(RESIZE_LIST) * size)
     global show
-    #source = Image.open(source).resize((size, size), Image.ANTIALIAS)
     source = source.rotate(
         random.randrange(-rotation, rotation), resample=Image.BILINEAR)
-    #source = source.resize((rs, rs), Image.ANTIALIAS)
-    image = Image.new('RGB', (size, size), bcolor)
+    source = source.resize((rs, rs), Image.ANTIALIAS)
+    image = Image.new('RGBA', (size, size), bcolor)
     image.paste(source, (x, y), source)
     image = image.convert('L')
     image = ImageOps.invert(image)
@@ -52,6 +51,11 @@ def generator(name, source, amount, offset, rotation, size, bcolor, false=False,
                            offset, rotation, size, bcolor)
     ytrain = np.ones(xrange)
     ytest = np.ones(xrange)
+
+    shuffle_array(xtrain, 420)
+    shuffle_array(ytrain, 420)
+    shuffle_array(xtest, 6969)
+    shuffle_array(ytest, 6969)
     np.savez_compressed(os.path.join(BASE_PATH, 'dataset' + "_x{}_{}px_".format(xrange, size) + name + '.npz'),
                         X_train=xtrain, y_train=ytrain, X_test=xtest, y_test=ytest)
 
@@ -63,23 +67,26 @@ def generator_multiple(name, amount, size, bcolor, rotation, false=False, false_
         xrange = amount - false_amount
     else:
         xrange = amount
-
+    global show
     sources = []
     labels = []
     source_amount = int(input("Source amount: "))
     for x in range(source_amount):
-        sources.append("sources/" + input("Source " + str(x+1) +  ": ").format((x)) + '.png')
+        sources.append("sources/" + input("Source " +
+                                          str(x + 1) + ": ").format((x)) + '.png')
         labels.append(input("Label: "))
 
     user_input = input("Switch X & Y?")
     print("Generating file...")
-    
+
     ytrain = ()
     ytest = ()
-    xtrain = np.ndarray((0,size,size))
-    xtest = np.ndarray((0,size,size))
+    xtrain = np.ndarray((0, size, size))
+    xtest = np.ndarray((0, size, size))
     for x in range(len(sources)):
-        sourcef = Image.open(sources[x]).resize((size, size), Image.ANTIALIAS)
+        show = True
+        sourcef = Image.open(sources[x]).convert(
+            'RGBA').resize((size, size), Image.ANTIALIAS)
         xtrain = np.append(xtrain, image_iterator(sourcef, int(xrange / len(sources)),
                                                   round(size / 4), rotation, size, bcolor), axis=0)
         xtest = np.append(xtest, image_iterator(sourcef, int(xrange / len(sources)),
@@ -100,7 +107,10 @@ def generator_multiple(name, amount, size, bcolor, rotation, false=False, false_
         xtest = temp2
     else:
         pass
-
+    shuffle_array(xtrain, 420)
+    shuffle_array(ytrain, 420)
+    shuffle_array(xtest, 6969)
+    shuffle_array(ytest, 6969)
     np.savez_compressed(os.path.join(BASE_PATH, 'dataset' + "_x{}_{}px_".format(xrange, size) + name + '.npz'),
                         X_train=xtrain, y_train=ytrain, X_test=xtest, y_test=ytest)
 
@@ -117,6 +127,13 @@ def image_iterator(source, amount, offset, rotation, size, bcolor):
             temp = np.empty((0, size, size))
             print(c)
         c += 1
+    print(c)
+    return array
+
+
+def shuffle_array(array, seed):
+    np.random.seed(seed)
+    np.random.shuffle(array)
     return array
 
 
@@ -158,7 +175,7 @@ def generator_setup():
     else:
         print("Generating file...")
         generator(NAME, SOURCE, AMOUNT, OFFSET, ROTATION, SIZE,
-              BACKGROUND_COLOR, FALSE, FALSE_SPLIT)
+                  BACKGROUND_COLOR, FALSE, FALSE_SPLIT)
 
 
 def choose_dataset():

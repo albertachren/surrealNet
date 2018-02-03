@@ -1,6 +1,6 @@
 """Purely for testing"""
 import timeit
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageStat
 import numpy as np
 import random
 import math
@@ -13,14 +13,11 @@ def f(x):
     x = math.sqrt(x)
     return x
 
-for x in range(30):
-    print(f(x))
-RESIZE_LIST = (1, 1, 1, 0.8, 0.8, 0.5)
-print(random.choice(RESIZE_LIST)*2)
+def shuffle_array(array, seed):
+    np.random.seed(seed)
+    np.random.shuffle(array)
+    return array
 
-(a,b),(c,d) = choose_dataset()
-print(b[0])
-print(b[1])
-print(b[2])
-print("lol")
-# 28, 56, 84, 112, 140
+image = Image.open("123.png")
+a = ImageStat.Stat(image)._getmean()
+print(a)

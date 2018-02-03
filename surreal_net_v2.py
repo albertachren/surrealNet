@@ -12,6 +12,7 @@ from keras.layers.core import Dense, Dropout
 from keras.models import Model, Sequential
 from keras.optimizers import Adam
 from datasets import choose_dataset
+from generate import load_image
 
 # pylint: disable=invalid-name
 os.environ["KERAS_BACKEND"] = "tensorflow"
@@ -24,7 +25,7 @@ K.set_image_dim_ordering('th')
 
 # The results are a little better when the dimensionality of the random vector is only 10.
 # The dimensionality has been left at 100 for consistency with other GAN implementations.
-randomDim = 100
+randomDim = 10
 dim2 = 3136
 img_width = 56
 plot_fig_size = 30
@@ -39,13 +40,14 @@ X_train = X_train.reshape(len(X_train), dim2)
 epochs = int(input("Epochs: "))
 bsize = int(input("Batch size: "))
 name = input("Name: ")
-DIRECTORY = "results/" + "surrealNetv2" + "_e{}_x{}_b{}_{}px_{}".format(epochs, xrange, bsize, img_width,name) + '/'
+DIRECTORY = "results/" + "surrealNetv2" + \
+    "_e{}_x{}_b{}_{}px_{}".format(epochs, xrange, bsize, img_width, name) + '/'
 # print(X_train.shape)
 # print(X_train)
 # print(X_test)
 
-# Optimizer
-adam = Adam(lr=0.0002, beta_1=0.5)
+# Optimizer, lr 0.0002
+adam = Adam(lr=0.00005, beta_1=0.0005 )
 
 generator = Sequential()
 generator.add(Dense(1024, input_dim=randomDim,
@@ -88,16 +90,17 @@ gLosses = []
 def plotLoss(epoch, bsize, img_width, name):
     print("Plotting loss")
     plt.figure(figsize=(10, 8))
-    plt.plot(gLosses, label='Generative loss')
     plt.plot(dLosses, label='Discriminitive loss')
+    plt.plot(gLosses, label='Generative loss')
     d = np.polyfit(np.arange(len(dLosses)), dLosses, 2)
     g = np.polyfit(np.arange(len(gLosses)), gLosses, 2)
     pd = np.poly1d(d)
     pg = np.poly1d(g)
     yd = pd(np.arange(len(dLosses)))
     yg = pg(np.arange(len(gLosses)))
-    plt.plot(np.arange(len(dLosses)), yd, 'r--', label="Discriminitive square fit")
-    plt.plot(np.arange(len(gLosses)), yg, 'b--', label="Generative square fit")
+    plt.plot(np.arange(len(dLosses)), yd, 'b--',
+             label="Discriminitive square fit")
+    plt.plot(np.arange(len(gLosses)), yg, 'r--', label="Generative square fit")
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.legend()
@@ -105,7 +108,7 @@ def plotLoss(epoch, bsize, img_width, name):
         DIRECTORY + 'gan_loss_epoch_{}_bsize_{}_{}px_{}.png'.format(epoch, bsize, img_width, name))
 
 
-def plotGeneratedImages(epoch, examples=100, dim=(10, 10), figsize=(10, 10)):
+def plotGeneratedImages(epoch, examples=100, dim=(10, 10), figsize=(30, 30)):
     noise = np.random.normal(0, 1, size=[examples, randomDim])
     generatedImages = generator.predict(noise)
     generatedImages = generatedImages.reshape(examples, img_width, img_width)
@@ -169,19 +172,21 @@ def train(epochs=1, batchSize=128):
         except:
             print("loss fail")
             pass
-        stop = time.time()-start
+        stop = time.time() - start
         if e == 2:
-            print("ETA: " , str(int(stop*(epochs-e)/60)), "min")
-        if e % int((epochs / 2)) == 0:
-            print("ETA: " , str(int(stop*(epochs-e)/60)), "min")
+            print("ETA: ", str(int(stop * (epochs - e) / 60)), "min")
+        if e % int((epochs / 4)) == 0:
+            print("ETA: ", str(int(stop * (epochs - e) / 60)), "min")
             print("Generating images")
             plotGeneratedImages(e, figsize=(plot_fig_size, plot_fig_size))
+            plotLoss(e, bsize, img_width, name)
+        if e == epochs:
             try:
                 saveModels(e, img_width, name)
             except RuntimeError as b:
                 print(b)
-    ostop = time.time()-ostart
-    print("Time taken: " + str(round(ostop/60)) + "min")
+    ostop = time.time() - ostart
+    print("Time taken: " + str(round(ostop / 60)) + "min")
     # Plot losses from every epoch
     plotLoss(e, bsize, img_width, name)
     print("Finished")

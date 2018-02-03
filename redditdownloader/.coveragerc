@@ -1,0 +1,11 @@
+# .coveragerc to control coverage.py
+[run]
+branch = False
+source = .
+omit =
+    # omit Wizards, which rely on human input.
+    ./classes/wizards/*
+    ./classes/console.py
+    ./classes/updater.py
+[report]
+ignore_errors = True

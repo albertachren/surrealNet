@@ -8,3 +8,6 @@
 /results/
 /__pycache__/
 /images/
+/generated/
+/sources/subset/
+/sources/subsetbackup/
